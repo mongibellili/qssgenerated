@@ -1,8 +1,3 @@
-name = "qssgenerated"
-uuid = "1a8de5a4-3884-499b-ab45-adf7e4668f6e"
-authors = ["mongibellili <bellilimongi@gmail.com>"]
-version = "0.1.0"
-
 [deps]
 ExprTools = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
