@@ -86,7 +86,6 @@ for i = 1:states
   computeNextTime(Val(O), i, initTime, nextStateTime, x, quantum)
   clearCache(taylorOpsCache,cacheSize)
   f(i,q,d,t,taylorOpsCache) #+t alloc   change to addT
-  computeNextInputTime(Val(O), i, initTime, 0.0,taylorOpsCache[1], nextInputTime, x,  quantum)
   computeNextInputTime(Val(O), i, initTime, 0.1,taylorOpsCache[1] , nextInputTime, x,  quantum)
 end
 
@@ -97,7 +96,7 @@ for i=1:numberZC
   oldsignValue[i,1]=sign(output) #sign modify 
   computeNextEventTime(i,output,oldsignValue,initTime,  nextEventTime, quantum,printCounter)
 end
-println("befoerwhile")
+
 ###################################################################################################################################################################
 ####################################################################################################################################################################
 #---------------------------------------------------------------------------------while loop-------------------------------------------------------------------------
@@ -121,14 +120,12 @@ while simt < ft #&& printcount < 10
     if quantum[index] < absQ
       quantum[index] = absQ
     end
- 
     tx[index] = simt
     for k = 1:O
       q[index].coeffs[k] = x[index].coeffs[k] #updateQ
     end
     tq[index] = simt #tq needed for higher orders
-     computeNextTime(Val(O), index, simt, nextStateTime, x, quantum) #
-
+    computeNextTime(Val(O), index, simt, nextStateTime, x, quantum) #
     for i = 1:length(SD[index])
       j = SD[index][i] 
       if j != 0           
@@ -136,7 +133,7 @@ while simt < ft #&& printcount < 10
         if elapsed > 0
           #"evaluate" x at new time only...derivatives get updated next using computeDerivativ()
           x[j].coeffs[1] = x[j](elapsed)
-          q[j].coeffs[1] = x[j].coeffs[1]
+          q[j].coeffs[1] = q[j](elapsed)
           tx[j] = simt
           tq[j] = simt
         end
@@ -156,7 +153,7 @@ while simt < ft #&& printcount < 10
     end#end for SZ
     ##################################input########################################
   elseif sch[3] == :ST_INPUT  # time of change has come to a state var that does not depend on anything...no one will give you a chance to change but yourself  
-   # println("begin input:who is resizing?")
+    println("input")
     elapsed = simt - tx[index]    
     clearCache(taylorOpsCache,cacheSize)   
     f(index,q,d,t,taylorOpsCache)
@@ -194,6 +191,7 @@ while simt < ft #&& printcount < 10
   #################################################################event########################################
   else
     #first we have a zc happened which corresponds to nexteventtime and index (one of zc) but we want also the sign in O to know ev+ or ev- 
+    println("ebent")
     modifiedIndex=0
     if (zcf[index](x,d,t,taylorOpsCache).coeffs[1])>0       # sign is not needed here
       modifiedIndex=2*index-1   # the  event that just occured is at  this index

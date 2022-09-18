@@ -10,6 +10,6 @@ function test()
           du[1] = u[2]
           du[2] =-u[1]-u[2]
       end
-     sol=QSS_Solve_from_model(twoVarSys12,odeprob,5.0,qss2())
+     sol=QSS_Solve_from_model(twoVarSys12,odeprob,5.0,qss1())
 end
 @btime test()
