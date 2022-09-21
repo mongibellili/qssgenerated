@@ -1,5 +1,5 @@
-using TimerOutputs
-function QSS_integrate(::Val{O}, s::QSS_data, odep::NLODEProblem,f::Function) where {O}
+
+function QSS_integrate(::Val{O}, s::QSS_data{T,Z}, odep::NLODEProblem{T,D,Z,Y},f::Function) where {O,T,D,Z,Y}
 #*********************************settings*****************************************
 #printCounter=[0,0]#vector{Int} fort debugging to be deleted
 ft = s.finalTime
@@ -35,11 +35,11 @@ ZC_discJac = odep.ZC_jacDiscrete
 evDep = odep.eventDependencies
 #********************************helper values*******************************
 numDiscr = length(d)
-states = length(initConditions)
-numberZC=size(zc_jac, 1)
-numEvents=numberZC*2   #each zero crossing has 1 posEv and 1 negEv
+#states = length(initConditions)
+#numberZC=size(zc_jac, 1)
+numEvents=Z*2   #each zero crossing has 1 posEv and 1 negEv
 savetime = savetimeincrement
-oldsignValue = MMatrix{numberZC,2}(zeros(numberZC*2))  #usedto track if zc changed sign; each zc has a value and a sign 
+oldsignValue = MMatrix{Z,2}(zeros(Z*2))  #usedto track if zc changed sign; each zc has a value and a sign 
 #*******************************create dependencies**************************$$
 SD = createDependencyMatrix(jacobian)
 dD =createDependencyMatrix(discJac) # temp dependency to be used to determine HD1 and HZ1 HD=Hd-dD Union Hs-sD
@@ -66,10 +66,10 @@ end
 n=1
 for k = 1:O # compute initial derivatives for x and q (similar to a recursive way )
   n=n*k
-   for i = 1:states
+   for i = 1:T
       q[i].coeffs[k] = x[i].coeffs[k]  # q computed from x and it is going to be used in the next x
     end
-    for i = 1:states
+    for i = 1:T
       clearCache(taylorOpsCache,cacheSize)
        f(i,q,d, t ,taylorOpsCache)
        (ndifferentiate!(integratorCache,taylorOpsCache[1] , k - 1))
@@ -77,7 +77,7 @@ for k = 1:O # compute initial derivatives for x and q (similar to a recursive wa
     end
 end
 
-for i = 1:states
+for i = 1:T
   savedVars[i][1].coeffs .= x[i].coeffs  #to be changed  1 2 3 ?
   quantum[i] = relQ * abs(x[i].coeffs[1]) 
   if quantum[i] < absQ
@@ -89,12 +89,12 @@ for i = 1:states
   computeNextInputTime(Val(O), i, initTime, 0.1,taylorOpsCache[1] , nextInputTime, x,  quantum)
 end
 
-for i=1:numberZC
+for i=1:Z
   clearCache(taylorOpsCache,cacheSize)
   output=zcf[i](x,d,t,taylorOpsCache).coeffs[1] #test this evaluation
   oldsignValue[i,2]=output #value
   oldsignValue[i,1]=sign(output) #sign modify 
-  computeNextEventTime(i,output,oldsignValue,initTime,  nextEventTime, quantum,printCounter)
+  computeNextEventTime(i,output,oldsignValue,initTime,  nextEventTime, quantum)#,printCounter)
 end
 
 ###################################################################################################################################################################
@@ -148,12 +148,12 @@ while simt < ft #&& printcount < 10
       if j != 0             
         #normally and later i should update q (integrate q=q+e derQ  for higher orders)
         clearCache(taylorOpsCache,cacheSize)
-        computeNextEventTime(j,zcf[j](x,d,t,taylorOpsCache),oldsignValue,simt,  nextEventTime, quantum,printCounter)
+        computeNextEventTime(j,zcf[j](x,d,t,taylorOpsCache)[0],oldsignValue,simt,  nextEventTime, quantum)#,printCounter)
       end  #end if j!=0
     end#end for SZ
     ##################################input########################################
   elseif sch[3] == :ST_INPUT  # time of change has come to a state var that does not depend on anything...no one will give you a chance to change but yourself  
-    println("input")
+
     elapsed = simt - tx[index]    
     clearCache(taylorOpsCache,cacheSize)   
     f(index,q,d,t,taylorOpsCache)
@@ -184,14 +184,14 @@ while simt < ft #&& printcount < 10
         #normally and later i should update q (integrate q=q+e derQ  for higher orders)
         clearCache(taylorOpsCache,cacheSize)
         
-        computeNextEventTime(j,zcf[j](q,d,t,taylorOpsCache),oldsignValue,simt,  nextEventTime, quantum,printCounter) 
+        computeNextEventTime(j,zcf[j](q,d,t,taylorOpsCache)[0],oldsignValue,simt,  nextEventTime, quantum)#,printCounter) 
       end  
      # println("end input:who is resizing?")
     end
   #################################################################event########################################
   else
     #first we have a zc happened which corresponds to nexteventtime and index (one of zc) but we want also the sign in O to know ev+ or ev- 
-    println("ebent")
+
     modifiedIndex=0
     if (zcf[index](x,d,t,taylorOpsCache).coeffs[1])>0       # sign is not needed here
       modifiedIndex=2*index-1   # the  event that just occured is at  this index
@@ -224,7 +224,7 @@ while simt < ft #&& printcount < 10
             if j != 0             
             #normally and later i should update q (integrate q=q+e derQ  for higher orders)
             clearCache(taylorOpsCache,cacheSize)           
-            computeNextEventTime(j,zcf[j](x,d,t,taylorOpsCache),oldsignValue,simt,  nextEventTime, quantum,printCounter)
+            computeNextEventTime(j,zcf[j](x,d,t,taylorOpsCache)[0],oldsignValue,simt,  nextEventTime, quantum)#,printCounter)
           end        
     end
   end#end state/input/event
@@ -233,18 +233,18 @@ while simt < ft #&& printcount < 10
       savetime += savetimeincrement #next savetime
       if len<count
         len=count*2
-        for i=1:states
+        for i=1:T
           resize!(savedVars[i],len)
         end
         resize!(savedTimes,len)
       end
-      for k = 1:states
+      for k = 1:T
           savedVars[k][count].coeffs .=x[k].coeffs 
       end
      savedTimes[count]=simt
   end#end if save
 end#end while
-for i=1:states# throw away empty points
+for i=1:T# throw away empty points
   resize!(savedVars[i],count)
 end
 resize!(savedTimes,count)

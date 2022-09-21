@@ -40,7 +40,7 @@ function computeDerivative( ::Val{3}  ,x::Taylor0{Float64},f::Taylor0{Float64},c
   return nothing
 end
 ######################################################################################################################################"
-function computeNextTime(::Val{1}, i::Int, currentTime::Float64, nextTime::MVector{T,Float64}, x::Vector{Taylor0{Float64}}, quantum::Vector{Float64})where{T}
+function computeNextTime(::Val{1}, i::Int, currentTime::Float64, nextTime::MVector{T,Float64}, x::Vector{Taylor0{Float64}}, quantum::Vector{Float64})where{T}#i can be absorbed
   absDeltaT=1e-12 # minimum deltaT to protect against der=Inf coming from sqrt(0) for example...similar to min ΔQ
     if (x[i].coeffs[2]) != 0
         tempTime=max(abs(quantum[i] /(x[i].coeffs[2])),absDeltaT)
@@ -171,14 +171,14 @@ function computeNextInputTime(::Val{3}, i::Int, currentTime::Float64,elapsed::Fl
 end
 
 ###########################################################################################################################################################""
-function computeNextEventTime(j::Int,ZCFun::Taylor0{Float64},oldsignValue,currentTime,  nextEventTime, quantum::Vector{Float64},printCounter::Vector{Int}) #later specify args
-  if oldsignValue[j,1] != sign(ZCFun.coeffs[1])
+function computeNextEventTime(j::Int,ZCFun::Float64,oldsignValue,currentTime,  nextEventTime, quantum::Vector{Float64})#,printCounter::Vector{Int}) #later specify args
+  if oldsignValue[j,1] != sign(ZCFun)
     nextEventTime[j]=currentTime 
   else
     #nextEventTime[j] =currentTime + minPosRoot(ZCFun.coeffs, Val(2)) #Inf  # we can estimate the time. this is important when zc depends only on time   
     nextEventTime[j]=Inf
   end
-  oldsignValue[j,1]=sign(ZCFun.coeffs[1])#update the values
-  oldsignValue[j,2]=ZCFun.coeffs[1]
+  oldsignValue[j,1]=sign(ZCFun)#update the values
+  oldsignValue[j,2]=ZCFun
 end
 

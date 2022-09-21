@@ -234,9 +234,9 @@ function twoInOne(ex)# name to be changed later....i call this funciton in the d
          # i = i + 1
 
       #end
-    elseif x isa Expr && x.head == :call && (x.args[1] == :*) && (4 <= length(x.args) <= 7)# i stopped at 7 cuz by testing it was allocating anyway after 7
+    elseif x isa Expr && x.head == :call && (x.args[1] == :*) && (4 <= length(x.args) <= 8)# i stopped at 7 cuz by testing it was allocating anyway after 7
          # if i < ex.args[2]
-            x.args[1] = :mulT
+            x.args[1] = :mulTT
             push!(cachexpr_lengthtracker.args,:b)
               cachexpr1 = Expr(:ref, :cache)
               push!(cachexpr1.args,length(cachexpr_lengthtracker.args))
@@ -250,7 +250,7 @@ function twoInOne(ex)# name to be changed later....i call this funciton in the d
               push!(x.args, cachexpr2)
            #   i=i+1
           #end
-    elseif x isa Expr && x.head == :call && (x.args[1] == :\)
+    elseif x isa Expr && x.head == :call && (x.args[1] == :/)
            # if i <= ex.args[2]
               x.args[1] = :divT  # symbol changed cuz avoid type taylor piracy    
               push!(cachexpr_lengthtracker.args,:b)

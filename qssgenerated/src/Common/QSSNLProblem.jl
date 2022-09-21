@@ -83,7 +83,7 @@ macro NLodeProblem(odeExprs)
                     z=replace_parameters(z,param)
                     extractJac_from_equs(z,T,D,usymbols,dsymbols,jac,jacDiscrete)                  
                    # push!(num_cache_equs,:($((twoInOne(:($(z),$(cacheSize)))).args[2])))   #number of caches distibuted                                         
-                    temp=:($((twoInOne(:($(z),1))).args[2]))   #number of caches distibuted   
+                    temp=:($((twoInOne(:($(z),1))).args[2]))   #number of caches distibuted   ...no need interpolation and wrap in expr....before was cuz quote....
                     if num_cache_equs<temp 
                           num_cache_equs=temp
                     end 

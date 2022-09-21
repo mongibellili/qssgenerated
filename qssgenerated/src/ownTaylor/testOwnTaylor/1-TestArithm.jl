@@ -1,4 +1,4 @@
-using qss
+using qssgenerated
 using BenchmarkTools
 t2=Taylor0([2.0,2.0,3.0],2)
 t1=Taylor0([1.0,1.0,0.0],2)
@@ -9,14 +9,14 @@ function test0(t2::Taylor0{Float64})
     one(t2)
 end
 function test0(t2::Taylor0{Float64},cache::Taylor0{Float64})
-    qss.one(t2,cache)
+    qssgenerated.one(t2,cache)
 end
 function test1(t2::Taylor0{Float64},t1::Taylor0{Float64})
     res=t2/t1/t1
 end
 
 function test2(t2::Taylor0{Float64},t1::Taylor0{Float64},cache1::Taylor0{Float64},cache2::Taylor0{Float64})
-    res2=qss.divT(qss.divT(t2,t1,cache1),t1,cache2)
+    res2=qssgenerated.divT(qss.divT(t2,t1,cache1),t1,cache2)
 end
 
 #= @show test0(t2)
@@ -27,4 +27,4 @@ end
 #= @show test1(t2,t1)
 @show test2(t2,t1,cache1,cache2) =#
 #@btime test1(t2,t1)
-@btime test2(t2,t1,cache1,cache2)
+#@btime test2(t2,t1,cache1,cache2)
