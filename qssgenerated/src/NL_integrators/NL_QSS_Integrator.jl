@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 # using TimerOutputs
 function QSS_integrate(::Val{O}, s::QSS_data{T,Z}, odep::NLODEProblem{T,D,Z,Y},f::Function) where {O,T,D,Z,Y}
 #  reset_timer!()
+=======
+
+function QSS_integrate(::Val{O}, s::QSS_data{T,Z}, odep::NLODEProblem{T,D,Z,Y},f::Function) where {O,T,D,Z,Y}
+>>>>>>> f6146dcfae368a3c045fb2f48b5714650e0e31dc
 #*********************************settings*****************************************
 #printCounter=[0,0]#vector{Int} fort debugging to be deleted
 ft = s.finalTime

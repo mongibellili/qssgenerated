@@ -157,6 +157,7 @@ function twoInOne(ex)# name to be changed later....i call this funciton in the d
    ############################### multiply sign#######################################
       #never happens :#  elseif x isa Expr && x.head == :call && x.args[1]==:* && length(x.args)==3 to get addmul or submul 
     elseif x isa Expr && x.head == :call && (x.args[1] == :*) && (3 == length(x.args))
+<<<<<<< HEAD
            x.args[1] = :mulT
            push!(cachexpr_lengthtracker.args,:b)
            cachexpr1 = Expr(:ref, :cache)
@@ -174,6 +175,37 @@ function twoInOne(ex)# name to be changed later....i call this funciton in the d
             push!(x.args, cachexpr2)
     elseif x isa Expr && x.head == :call && (x.args[1] == :/)
               x.args[1] = :divT   
+=======
+      #if i <= ex.args[2]
+        x.args[1] = :mulT
+        push!(cachexpr_lengthtracker.args,:b)
+          cachexpr1 = Expr(:ref, :cache)
+          push!(cachexpr1.args,length(cachexpr_lengthtracker.args))
+          #cachexpr.args[2] = index[i]
+          push!(x.args, cachexpr1)
+         # i = i + 1
+
+      #end
+    elseif x isa Expr && x.head == :call && (x.args[1] == :*) && (4 <= length(x.args) <= 8)# i stopped at 7 cuz by testing it was allocating anyway after 7
+         # if i < ex.args[2]
+            x.args[1] = :mulTT
+            push!(cachexpr_lengthtracker.args,:b)
+              cachexpr1 = Expr(:ref, :cache)
+              push!(cachexpr1.args,length(cachexpr_lengthtracker.args))
+              #cachexpr.args[2] = index[i]
+              push!(x.args, cachexpr1)
+           #   i = i + 1
+              push!(cachexpr_lengthtracker.args,:b)
+              cachexpr2 = Expr(:ref, :cache)   #multiply needs two caches
+              push!(cachexpr2.args,length(cachexpr_lengthtracker.args))
+              #cachexpr.args[2] = index[i]
+              push!(x.args, cachexpr2)
+           #   i=i+1
+          #end
+    elseif x isa Expr && x.head == :call && (x.args[1] == :/)
+           # if i <= ex.args[2]
+              x.args[1] = :divT  # symbol changed cuz avoid type taylor piracy    
+>>>>>>> f6146dcfae368a3c045fb2f48b5714650e0e31dc
               push!(cachexpr_lengthtracker.args,:b)
               cachexpr = Expr(:ref, :cache)
               push!(cachexpr.args,length(cachexpr_lengthtracker.args))
