@@ -1,7 +1,7 @@
 #hold helper datastructures needed for simulation, can be seen as the model in the qss architecture (model-integrator-quantizer)
 struct QSS_data{T,Z}
     quantum :: Vector{Float64} 
-    x :: Vector{Taylor0{Float64}}
+    x :: Vector{Taylor0{Float64}}  #MVector cannot hold non-isbits
     q :: Vector{Taylor0{Float64}}
     tx ::  MVector{T,Float64} 
     tq :: MVector{T,Float64} 
@@ -21,6 +21,34 @@ struct QSS_data{T,Z}
     dQmin ::Float64    
     dQrel ::Float64  
 end
+struct LiQSS_data{T,Z,O}
+    initJac::MVector{T,MVector{T,Float64}}
+    u:: MVector{T,MVector{O,Float64}}
+    tu::MVector{T,Float64}
+    qaux::MVector{T,MVector{O,Float64}}#V=4,5...
+    olddx::MVector{T,MVector{O,Float64}}#V=4,5...
+    quantum :: Vector{Float64} 
+    x :: Vector{Taylor0{Float64}}
+    q :: Vector{Taylor0{Float64}}
+    tx ::  MVector{T,Float64} 
+    tq :: MVector{T,Float64} 
+    nextStateTime :: MVector{T,Float64}    
+    nextInputTime :: Vector{Float64}  # later change to Mvector
+    nextEventTime :: MVector{Z,Float64}  
+    t::Taylor0{Float64}# mute taylor var to be used with math functions to represent time
+    integratorCache::Taylor0{Float64}
+    order::Int
+    savedVars :: Vector{Array{Taylor0{Float64}}} #has to be vector (not SA) cuz to be resized in integrator
+    savedTimes :: Vector{Float64}  
+    taylorOpsCache::Vector{Taylor0{Float64}}
+
+    finalTime:: Float64   
+    savetimeincrement::Float64 
+    initialTime :: Float64    
+    dQmin ::Float64    
+    dQrel ::Float64  
+     
+end
 function saveat(savetimeincrement::Float64) # it s better than the user entre a number...fool-proof
     savetimeincrement
 end 
@@ -29,6 +57,7 @@ qss2()=Val(2)
 qss3()=Val(3)
 liqss1()=Val(4)
 liqss2()=Val(5)
+liqss3()=Val(6)
 
 function getOrderfromSolverMethod(::Val{V}) where {V}  # @generated and inline did not enhance performance  
     if V==1 || V==2 || V==3
@@ -74,6 +103,7 @@ function QSS_Unique_Solve(f::Function,prob::NLODEProblem{T,D,Z,Y},finalTime::Flo
      tx = @MVector zeros(T)
      tq = @MVector zeros(T)
      nextEventTime=@MVector zeros(Z)
+     
      t = Taylor0(zeros(order + 1), order)
      t[1]=1.0
      t[0]=initialTime
@@ -99,7 +129,9 @@ function QSS_Unique_Solve(f::Function,prob::NLODEProblem{T,D,Z,Y},finalTime::Flo
      for i=1:cacheSize
        push!(taylorOpsCache,Taylor0(zeros(order+1),order))
      end
-     qssdata= QSS_data(quantum,x,q,tx,tq,nextStateTime,nextInputTime ,nextEventTime , t, integratorCache,order,savedVars,savedTimes,taylorOpsCache,finalTime,savetimeincrement, initialTime,dQmin,dQrel)
+
+
+    
     
   #=    zcf = Vector{Function}()
      for i = 1:length(prob.zceqs)# later change to numberZC
@@ -108,9 +140,34 @@ function QSS_Unique_Solve(f::Function,prob::NLODEProblem{T,D,Z,Y},finalTime::Flo
 
 
     if V==1 || V ==2 || V ==3
-     QSS_integrate(Val(V),qssdata,prob,f)   # solver=Val(\d) needed to specialize the integrator...and f has to be passed alone, it cannot be burried in qss_data...x2 performance
+        # solver=Val(\d) needed to specialize the integrator...and f has to be passed alone, it cannot be burried in qss_data...x2 performance
+     qssdata= QSS_data(quantum,x,q,tx,tq,nextStateTime,nextInputTime ,nextEventTime , t, integratorCache,order,savedVars,savedTimes,taylorOpsCache,finalTime,savetimeincrement, initialTime,dQmin,dQrel)
+     QSS_integrate(Val(V),qssdata,prob,f)
     else
-     LiQSS_integrate(Val(V-3),qssdata,prob,f)
+        d = prob.discreteVars
+        jacobian = prob.jacobian
+        #@show jacobian
+        dsym = [symbols("d$i") for i in 1:D]
+        tempJac = Vector{Array{Float64}}(undef, T)# 
+        for i = 1:T
+            temparr=Array{Float64}(undef, T)
+            for j=1:T  
+               ex=jacobian[i][j]
+               for k in eachindex(dsym)
+                   ex=subs(ex, dsym[k]=>d[k])
+               end        
+                temparr[j]=ex
+            end
+            tempJac[i]=temparr
+         end
+         initJac = MVector{T,MVector{T,Float64}}(tuple(tempJac...))
+        #@show intiJac
+        u = zeros(MVector{T,MVector{order,Float64}})
+        tu = @MVector zeros(T)
+        qaux = zeros(MVector{T,MVector{order,Float64}})
+        olddx = zeros(MVector{T,MVector{order,Float64}})
+        liqssdata= LiQSS_data(initJac,u,tu,qaux,olddx,quantum,x,q,tx,tq,nextStateTime,nextInputTime ,nextEventTime , t, integratorCache,order,savedVars,savedTimes,taylorOpsCache,finalTime,savetimeincrement, initialTime,dQmin,dQrel)
+        LiQSS_integrate(Val(V-3),liqssdata,prob,f)
     end
      #return nothing be careful to add this
  end

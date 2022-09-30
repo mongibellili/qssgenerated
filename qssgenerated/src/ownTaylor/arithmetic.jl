@@ -12,18 +12,20 @@
 ==(a::Taylor0{T}, b::Taylor0{S}) where {T<:Number,S<:Number} = ==(promote(a,b)...)
 
 function ==(a::Taylor0{T}, b::Taylor0{T}) where {T<:Number}
-    if a.order != b.order
+#=     if a.order != b.order
         a, b = fixorder(a, b)
-    end
+    end =#
     return a.coeffs == b.coeffs
 end
 iszero(a::Taylor0) = iszero(a.coeffs)
 ## zero and one ##
  zero(a::Taylor0) = Taylor0(zero.(a.coeffs))
  function zero(a::Taylor0,cache::Taylor0)
+    cache.coeffs .= 0.0
     return cache
  end
  function one(a::Taylor0,cache::Taylor0) 
+    cache.coeffs .= 0.0
     cache[0]=1.0
     return cache
 end
@@ -33,15 +35,15 @@ function one(a::Taylor0)
         return b
 
 end
-## Addition  ##
+## Addition  fallback for case a+a+a+a+a+a+a+a+a+a+a+a+a+a##
 
 (+)(a::Taylor0{T}, b::Taylor0{S}) where {T<:Number,S<:Number} =
     (+)(promote(a,b)...)
 
 function (+)(a::Taylor0{T}, b::Taylor0{T}) where {T<:Number}
-    if a.order != b.order
+#=     if a.order != b.order
         a, b = fixorder(a, b)
-    end
+    end =#
     v = similar(a.coeffs)
     @__dot__ v = (+)(a.coeffs, b.coeffs)
     return Taylor0(v, a.order)
@@ -75,7 +77,7 @@ end
        
 ## substraction ##
 
-(-)(a::Taylor0{T}, b::Taylor0{S}) where {T<:Number,S<:Number} =
+#= (-)(a::Taylor0{T}, b::Taylor0{S}) where {T<:Number,S<:Number} =
     (-)(promote(a,b)...)
 
 function (-)(a::Taylor0{T}, b::Taylor0{T}) where {T<:Number}
@@ -111,19 +113,19 @@ function (-)(b::T, a::Taylor0{T}) where {T<:Number}
     @inbounds coeffs[1] = (-)(b, a[0])
     return Taylor0(coeffs, a.order)
 end       
-    
+     =#
 
 
 
 
 
 
-## Multiplication ##
+## Multiplication fallback for case a*a*a*a*a*a*a*a*a*a*a*a*a##
 
 function *(a::Taylor0{T}, b::Taylor0{T}) where {T<:Number}
-        if a.order != b.order
+#=         if a.order != b.order
             a, b = fixorder(a, b)
-        end
+        end =#
         c = Taylor0(zero(a[0]), a.order)
         for ord in eachindex(c)
             mul!(c, a, b, ord) # updates c[ord]

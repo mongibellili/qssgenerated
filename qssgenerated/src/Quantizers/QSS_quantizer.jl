@@ -40,7 +40,7 @@ function computeDerivative( ::Val{3}  ,x::Taylor0{Float64},f::Taylor0{Float64},c
   return nothing
 end
 ######################################################################################################################################"
-function computeNextTime(::Val{1}, i::Int, currentTime::Float64, nextTime::MVector{T,Float64}, x::Vector{Taylor0{Float64}}, quantum::Vector{Float64})where{T}
+function computeNextTime(::Val{1}, i::Int, currentTime::Float64, nextTime::MVector{T,Float64}, x::Vector{Taylor0{Float64}}, quantum::Vector{Float64})where{T}#i can be absorbed
   absDeltaT=1e-12 # minimum deltaT to protect against der=Inf coming from sqrt(0) for example...similar to min ΔQ
     if (x[i].coeffs[2]) != 0
         tempTime=max(abs(quantum[i] /(x[i].coeffs[2])),absDeltaT)
@@ -60,11 +60,11 @@ end
 function computeNextTime(::Val{2}, i::Int, currentTime::Float64, nextTime::MVector{T,Float64}, x::Vector{Taylor0{Float64}}, quantum::Vector{Float64})where{T}
     absDeltaT=1e-12 # minimum deltaT to protect against der=Inf coming from sqrt(0) for example...similar to min ΔQ
       if (x[i].coeffs[3]) != 0
-          tempTime=max(sqrt(abs(quantum[i] / ((x[i].coeffs[3])*2))),absDeltaT)
+          tempTime=max(sqrt(abs(quantum[i] / ((x[i].coeffs[3])))),absDeltaT)
           if tempTime!=absDeltaT #normal
               nextTime[i] = currentTime + tempTime#sqrt(abs(quantum[i] / ((x[i].coeffs[3])*2))) #*2 cuz coeff contains fact()
           else#usual sqrt(quant/der) is very small
-            x[i].coeffs[3]=sign(x[i].coeffs[3])*(abs(quantum[i])/(absDeltaT*absDeltaT))/2# adjust second derivative if it is too high
+            x[i].coeffs[3]=sign(x[i].coeffs[3])*(abs(quantum[i])/(absDeltaT*absDeltaT))# adjust second derivative if it is too high
             nextTime[i] = currentTime + tempTime
           end
       else
@@ -75,7 +75,7 @@ end
 function computeNextTime(::Val{3}, i::Int, currentTime::Float64, nextTime::MVector{T,Float64}, x::Vector{Taylor0{Float64}}, quantum::Vector{Float64})where{T}
   absDeltaT=1e-12 # minimum deltaT to protect against der=Inf coming from sqrt(0) for example...similar to min ΔQ
     if (x[i].coeffs[4]) != 0
-        tempTime=max(cbrt(abs(quantum[i] / ((x[i].coeffs[4])*6))),absDeltaT)
+        tempTime=max(cbrt(abs(quantum[i] / (6*(x[i].coeffs[4])))),absDeltaT)
         if tempTime!=absDeltaT #normal
             nextTime[i] = currentTime + tempTime#sqrt(abs(quantum[i] / ((x[i].coeffs[3])*2))) #*2 cuz coeff contains fact()
         else#usual sqrt(quant/der) is very small
@@ -99,7 +99,7 @@ function reComputeNextTime(::Val{1}, index::Int, currentTime::Float64, nextTime:
 end
 
 function reComputeNextTime(::Val{2}, index::Int, currentTime::Float64, nextTime::MVector{T,Float64}, x::Vector{Taylor0{Float64}},q::Vector{Taylor0{Float64}}, quantum::Vector{Float64})where{T}
-  coef=@SVector [q[index].coeffs[1] - (x[index].coeffs[1]) - quantum[index], q[index].coeffs[2]-x[index].coeffs[2],-(x[index].coeffs[3])]#*2
+  coef=@SVector [q[index].coeffs[1] - (x[index].coeffs[1]) - quantum[index], q[index].coeffs[2]-x[index].coeffs[2],-(x[index].coeffs[3])]#not *2 because i am solving c+bt+a/2*t^2
   time1 = currentTime + minPosRoot(coef, Val(2))
   coef=setindex(coef,q[index].coeffs[1] - (x[index].coeffs[1]) + quantum[index],1)
   time2 = currentTime + minPosRoot(coef, Val(2))
@@ -171,14 +171,14 @@ function computeNextInputTime(::Val{3}, i::Int, currentTime::Float64,elapsed::Fl
 end
 
 ###########################################################################################################################################################""
-function computeNextEventTime(j::Int,ZCFun::Taylor0{Float64},oldsignValue,currentTime,  nextEventTime, quantum::Vector{Float64},printCounter::Vector{Int}) #later specify args
-  if oldsignValue[j,1] != sign(ZCFun.coeffs[1])
+function computeNextEventTime(j::Int,ZCFun::Float64,oldsignValue,currentTime,  nextEventTime, quantum::Vector{Float64})#,printCounter::Vector{Int}) #later specify args
+  if oldsignValue[j,1] != sign(ZCFun)
     nextEventTime[j]=currentTime 
   else
     #nextEventTime[j] =currentTime + minPosRoot(ZCFun.coeffs, Val(2)) #Inf  # we can estimate the time. this is important when zc depends only on time   
     nextEventTime[j]=Inf
   end
-  oldsignValue[j,1]=sign(ZCFun.coeffs[1])#update the values
-  oldsignValue[j,2]=ZCFun.coeffs[1]
+  oldsignValue[j,1]=sign(ZCFun)#update the values
+  oldsignValue[j,2]=ZCFun
 end
 

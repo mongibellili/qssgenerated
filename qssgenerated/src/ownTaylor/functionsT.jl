@@ -17,7 +17,10 @@ function exp(a::Taylor0,c::Taylor0)
     end
     return c
 end
-
+function exp(a::T,c::Taylor0)where {T<:Number}
+    c[0]=exp(a)
+    return c
+end
 function log(a::Taylor0,c::Taylor0)
     iszero(constant_term(a)) && throw(DomainError(a,
             """The 0-th order coefficient must be non-zero in order to expand `log` around 0."""))
@@ -26,7 +29,12 @@ function log(a::Taylor0,c::Taylor0)
     end
     return c
 end
-
+function log(a::T,c::Taylor0)where {T<:Number}
+    iszero(a) && throw(DomainError(a,
+            """ log(0) undefined."""))
+    c[0]=log(a)
+    return c
+end
 
 function sincos(a::Taylor0,s::Taylor0,c::Taylor0)
     for k in eachindex(a)
@@ -34,10 +42,16 @@ function sincos(a::Taylor0,s::Taylor0,c::Taylor0)
     end
     return s, c
 end
-sin(a::Taylor0,s::Taylor0,c::Taylor0) = sinhcos(a,s,c)[1]
-cos(a::Taylor0,s::Taylor0,c::Taylor0) = sinhcos(a,s,c)[2]
-
-
+sin(a::Taylor0,s::Taylor0,c::Taylor0) = sincos(a,s,c)[1]
+cos(a::Taylor0,s::Taylor0,c::Taylor0) = sincos(a,s,c)[2]
+function sin(a::T,s::Taylor0,c::Taylor0)where {T<:Number}
+    s[0]=sin(a)
+    return s
+end
+function cos(a::T,s::Taylor0,c::Taylor0)where {T<:Number}
+    c[0]=cos(a)
+    return c
+end
 
 function tan(a::Taylor0,c::Taylor0,c2::Taylor0)
     for k in eachindex(a)
@@ -45,7 +59,11 @@ function tan(a::Taylor0,c::Taylor0,c2::Taylor0)
     end
     return c
 end
-
+function tan(a::T,c::Taylor0,c2::Taylor0)where {T<:Number}
+   c[0]=tan(a)
+    return c
+end
+#####################################constant case not implemented yet
 function asin(a::Taylor0,c::Taylor0,r::Taylor0,cache3::Taylor0)
     a0 = constant_term(a)
     a0^2 == one(a0) && throw(DomainError(a,

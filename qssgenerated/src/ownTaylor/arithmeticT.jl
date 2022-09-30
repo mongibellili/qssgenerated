@@ -31,18 +31,23 @@
 
     end
 
-    function mulTfoldl(op, res, bs...) # op is only mulT so remove later
+    function mulTfoldl(res::P, bs...) where {P<:Taylor0}
       l = length(bs)
-
-      #i =  0;  l == i && return a  # already checked
       i =  2;  l == i && return res 
-      i =  3;  l == i && return              op(res, bs[1],bs[end-1],bs[end])
-      i =  4; l == i && return           op(op(res, bs[1],bs[end-1],bs[end]),bs[2],bs[end-1],bs[end])
-      i =  5;  l == i && return        op(op(op(res, bs[1],bs[end-1],bs[end]),bs[2],bs[end-1],bs[end]),bs[3],bs[end-1],bs[end])
+      i =  3;  l == i && return              mulTT(res, bs[1],bs[end-1],bs[end])
+      i =  4; l == i && return           mulTT(mulTT(res, bs[1],bs[end-1],bs[end]),bs[2],bs[end-1],bs[end])
+      i =  5;  l == i && return        mulTT(mulTT(mulTT(res, bs[1],bs[end-1],bs[end]),bs[2],bs[end-1],bs[end]),bs[3],bs[end-1],bs[end])
+      i =  6;  l == i && return      mulTT(mulTT(mulTT(mulTT(res, bs[1],bs[end-1],bs[end]),bs[2],bs[end-1],bs[end]),bs[3],bs[end-1],bs[end]),bs[4],bs[end-1],bs[end])
+
+
+     #=  if l == 6
+        println("alloc!!!")
+         return      mulTT(mulTT(mulTT(mulTT(res, bs[1],bs[end-1],bs[end]),bs[2],bs[end-1],bs[end]),bs[3],bs[end-1],bs[end]),bs[4],bs[end-1],bs[end])
+      end =#
     end
-    function mulT(a, b, c, xs...)
-      if length(xs)>1# length(xs)==0 will never happen, length(xs)==1 is the case far-below
-        mulTfoldl(mulT, mulT( mulT(a,b,xs[end-1],xs[end]) , c,xs[end-1] ,xs[end] ), xs...)
+    function mulTT(a::P, b::R, c::Q, xs...)where {P,Q,R <:Union{Taylor0,Number}}
+      if length(xs)>1
+        mulTfoldl( mulTT( mulTT(a,b,xs[end-1],xs[end]) , c,xs[end-1] ,xs[end] ), xs...)
       end
     end
 
@@ -87,7 +92,7 @@ function addsub(c::Taylor0{T},a::T, b::T,cache::Taylor0{T}) where {T<:Number}
 end
  addsub(a::T, c::Taylor0{T},b::T,cache::Taylor0{T}) where {T<:Number}= addsub(c,a, b,cache) 
  
- function addsub(c::T,a::T, b::T,cache::Taylor0{T}) where {T<:Number}#requires cache1 clean
+ function addsub(c::T,a::T, b::T,cache::Taylor0{T}) where {T<:Number}#requires cache clean
   cache[0]=a+c-b
   return cache
 end
@@ -240,14 +245,14 @@ function mulT(a::T, b::T,cache1::Taylor0{T}) where {T<:Number}
    return cache1
 end
 #########################mul uses two caches when the op has many terms###########################
-function mulT(a::Taylor0{T}, b::T,cache1::Taylor0{T},cache2::Taylor0{T}) where {T<:Number}
+function mulTT(a::Taylor0{T}, b::T,cache1::Taylor0{T},cache2::Taylor0{T}) where {T<:Number}#in middle ops: a is the returned cache1 so do not fudge a or cache1 before the end
   fill!(cache2.coeffs, b)
   @__dot__ cache1.coeffs = a.coeffs * cache2.coeffs  ##fixed broadcast dimension mismatch
   return cache1
 end
-mulT(a::T,b::Taylor0{T}, cache1::Taylor0{T},cache2::Taylor0{T}) where {T<:Number} = mulT(b , a,cache1,cache2)
+mulTT(a::T,b::Taylor0{T}, cache1::Taylor0{T},cache2::Taylor0{T}) where {T<:Number} = mulTT(b , a,cache1,cache2)
 
-function mulT(a::Taylor0{T}, b::Taylor0{T},cache1::Taylor0{T},cache2::Taylor0{T}) where {T<:Number}
+function mulTT(a::Taylor0{T}, b::Taylor0{T},cache1::Taylor0{T},cache2::Taylor0{T}) where {T<:Number}#in middle ops: a is the returned cache1 so do not fudge a or cache1 before the end
  for k in eachindex(a)
       @inbounds cache2[k] = a[0] * b[k]
       @inbounds for i = 1:k
@@ -257,7 +262,7 @@ function mulT(a::Taylor0{T}, b::Taylor0{T},cache1::Taylor0{T},cache2::Taylor0{T}
   @__dot__ cache1.coeffs = cache2.coeffs
   return cache1
 end
-function mulT(a::T, b::T,cache1::Taylor0{T},cache2::Taylor0{T}) where {T<:Number}
+function mulTT(a::T, b::T,cache1::Taylor0{T},cache2::Taylor0{T}) where {T<:Number}
   #cache1 needs to be clean: a clear here will alloc...this is the only "mul" that wants a clean cache
   #sometimes the cache can be dirty at only first position: it will not throw an assert error!!!
  # cache[1].coeffs.=0.0 #it causes two allocs for mul(cst,cst,a,b)
@@ -266,7 +271,7 @@ function mulT(a::T, b::T,cache1::Taylor0{T},cache2::Taylor0{T}) where {T<:Number
 end
 
 #########################################muladdT and subadd not test  : added T to muladd cuz there did not want to import muladd to extend...maybe later
-function muladdT(a::Taylor0{T}, b::Taylor0{T}, c::Taylor0{T},cache1::Taylor0{T}) where {T<:Number}
+#= function muladdT(a::Taylor0{T}, b::Taylor0{T}, c::Taylor0{T},cache1::Taylor0{T}) where {T<:Number}
   for k in eachindex(a)
        cache1[k] = a[0] * b[k] + c[k]
        @inbounds for i = 1:k
@@ -275,7 +280,7 @@ function muladdT(a::Taylor0{T}, b::Taylor0{T}, c::Taylor0{T},cache1::Taylor0{T})
    end
   @__dot__ cache1.coeffs = cache2.coeffs
    return cache1
-end
+end =#
 
 function muladdT(a::P,b::Q,c::R,cache1::Taylor0{T}) where {P,Q,R <:Union{Taylor0,Number},T<:Number}
       addT(mulT(a, b,cache1),c,cache1) # improvement of added performance not tested: there is one extra step of 
@@ -288,13 +293,18 @@ end
 
 function divT(a::Taylor0{T}, b::T,cache1::Taylor0{T}) where {T<:Number}
   fill!(cache1.coeffs, b)
-  println("division")
+  #println("division")
   #= @inbounds aux = a.coeffs[1] / b
   v = Array{typeof(aux)}(undef, length(a.coeffs)) =#
   @__dot__ cache1.coeffs = a.coeffs / cache1.coeffs
   return cache1
 end
+function divT(a::T, b::Taylor0{T},cache1::Taylor0{T}) where {T<:Number}
+  powerT(b, -1.0,cache1)
+  @__dot__ cache1.coeffs=cache1.coeffs*a ### broadcast dimension mismatch------------------div can have 2 caches then...:(
 
+  return cache1
+end
 #divT(a::Taylor0{T}, b::Taylor0{S}) where {T<:Number,S<:Number} = divT(promote(a,b)...)
 
 function divT(a::Taylor0{T}, b::Taylor0{T},cache1::Taylor0{T}) where {T<:Number}
