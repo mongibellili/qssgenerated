@@ -1,0 +1,81 @@
+ *******using PrimInfo PC (slower results than laptop)*******
+
+nonStiff sys:
+============
+	du[1] = u[2]
+	du[2] =-u[1]-u[2]
+qss2:                        159.400 μs (507 allocations: 34.04 KiB)
+liqss1 using h :             6.516 ms   (579 allocations: 36.41 KiB)
+liqss1: using +-ΔQ           6.445 ms   (579 allocations: 36.41 KiB)
+liqss2: using h	             199.200 μs (579 allocations: 36.51 KiB)
+liqss3: using h	(relaxed)    69.040 ms  (579 allocations: 38.23 KiB)
+liqss3: using h (exacte)     78.584 ms  (579 allocations: 38.23 KiB)
+liqss3: using +-ΔQ	    not working yet
+
+qss2
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ state-recomputenext      431   75.3μs   68.1%   175ns     0.00B     - %    0.00B
+ updateQ                  285   35.2μs   31.9%   124ns     0.00B     - %    0.00B
+ ────────────────────────────────────────────────────────────────────────────────
+
+qss3:
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ state-recomputenext      219   68.0μs   79.2%   311ns     0.00B     - %    0.00B
+ updateQ                  135   17.9μs   20.8%   133ns     0.00B     - %    0.00B
+
+liqss2 (h exacte)
+ Section              ncalls     time    %tot     avg     alloc    %tot      avg
+ ───────────────────────────────────────────────────────────────────────────────
+ state-recompute         465   89.1μs   47.7%   192ns     0.00B     - %    0.00B
+ state-updateQ           276   58.7μs   31.4%   213ns     0.00B     - %    0.00B
+ updateLinearApprox      276   39.1μs   20.9%   142ns     0.00B     - %    0.00B
+
+
+liqss3 (h exacte)
+ Section              ncalls     time    %tot     avg     alloc    %tot      avg
+ ───────────────────────────────────────────────────────────────────────────────
+ state-recompute        141k   40.5ms   46.6%   287ns     0.00B     - %    0.00B
+ state-updateQ         70.7k   35.4ms   40.7%   501ns     0.00B     - %    0.00B
+ updateLinearApprox    70.7k   11.1ms   12.8%   157ns     0.00B     - %    0.00B
+
+
+OrdinaryDiffEq: 
+BS3()               55.600 μs (218 allocations: 15.97 KiB)
+Rosenbrock23()      90.600 μs (304 allocations: 22.30 KiB)
+
+
+
+stiff system:
+============
+	du[1] = 0.01*u[2]
+    du[2] =-100.0*u[1]-100.0*u[2]+2020.0
+
+liqss1: using h           2.931 ms (611 allocations: 38.98 KiB)
+liqss1: using +-ΔQ        3.163 ms (611 allocations: 38.98 KiB)
+liqss2: using h           138.900 μs (531 allocations: 36.57 KiB)
+liqss2: using +-ΔQ        1.291 ms (611 allocations: 39.07 KiB)
+liqss3: using h(relaxed)  1.835 s (611 allocations: 40.80 KiB)
+liqss3: using h(exacte)   1.413 s (611 allocations: 40.80 KiB)
+qss2:                     392.300 μs (539 allocations: 36.60 KiB)
+
+
+
+liqss2 (h exacte)
+ Section              ncalls     time    %tot     avg     alloc    %tot      avg
+ ───────────────────────────────────────────────────────────────────────────────
+ state-recompute         176   34.4μs   49.3%   195ns     0.00B     - %    0.00B
+ state-updateQ            91   20.9μs   29.9%   230ns     0.00B     - %    0.00B
+ updateLinearApprox       91   14.5μs   20.8%   159ns     0.00B     - %    0.00B
+
+liqss3 (h exacte)
+ Section              ncalls     time    %tot     avg     alloc    %tot      avg
+ ───────────────────────────────────────────────────────────────────────────────
+ state-recompute       2.88M    772ms   53.3%   268ns     0.00B     - %    0.00B
+ state-updateQ         1.44M    437ms   30.2%   304ns     0.00B     - %    0.00B
+ updateLinearApprox    1.44M    240ms   16.6%   167ns     0.00B     - %    0.00B
+
+OrdinaryDiffEq: 
+BS3()               170.700 μs (1004 allocations: 95.28 KiB)
+Rosenbrock23()      86.100 μs (322 allocations: 23.66 KiB)
