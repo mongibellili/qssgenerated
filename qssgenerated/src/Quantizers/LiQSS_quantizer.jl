@@ -369,16 +369,17 @@ function updateQ(::Val{3},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor
 
     u=u+(simt-tu[i])*u1+(simt-tu[i])*(simt-tu[i])*u2/2  # for order 2: u=u+tu*deru  this is necessary deleting causes scheduler error
     uv[i][1]=u
-    u1=u+(simt-tu[i])*u2 #2*u2
+    u1=u1+(simt-tu[i])*u2 #2*u2
     uv[i][2]=u1
     tu[i]=simt
     
    # olddx[i][2]=2*x2# 
     dddx=6*x3
+    #i used ddx instead of dddx it got worse...number of steps doubled
     a=av[i][i]
      if a!=0.0
         if dddx ==0.0
-            dddx=a*a*a*(q+quantum[i])+a*a*u+a*u1+u2 #*2
+            dddx=a*a*a*q+a*a*u+a*u1+u2 #*2
             if dddx==0.0
                 dddx=1e-26# changing -40 to -6 nothing changed
             end
@@ -459,6 +460,7 @@ function updateQ(::Val{3},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor
        # q=x+quantum[i]   #removing it errors
         if dddx!=0.0
             h=sqrt(abs(2*quantum[i]/dddx))
+           # h=cbrt(abs(2*quantum[i]/dddx)) # this shift graph up starting from middle (when/after der=0)
             q1=u+h*u1+h*h*u2/2   #*2
             q2=u1+h*u2  #*2
        else

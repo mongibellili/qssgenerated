@@ -11,7 +11,7 @@ function test()
         #= du[1] = -u[1]-u[2]+0.2
         du[2] =u[1]-u[2]+1.2 =#
     end
-   sol = QSS_Solve(odeprob,5.0,qss2())
+   sol = QSS_Solve(odeprob,5.0,liqss3())
    plotSol(sol)
  
    
