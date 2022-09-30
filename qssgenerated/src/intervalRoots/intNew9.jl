@@ -187,7 +187,7 @@ pp=pointer(Vector{NTuple{2,Float64}}(undef, 3))
 #@show gensmallestpositiverootintervalnewton(1.0, -2.0, -1.0)#2.414213562506035#@show quadraticsmallestpositiveroot(1.0, -2.0, -1.0)#1.649 ns (0 allocations: 0 bytes)
 #@show smallestpositiverootintervalnewtonregulafalsi((-1.33,2.0,1.0,6.0),pp)
 #@btime smallestpositiverootintervalnewtonregulafalsi((-1.33,2.0,1.0,6.0),pp)# 93.687 ns (0 allocations: 0 bytes)
-@btime smallestpositiverootintervalnewtonregulafalsi(coeffs,pp)# 93.687 ns (0 allocations: 0 bytes)
+@btime smallestpositiverootintervalnewtonregulafalsi(coeffs,pp)# 93.687 ns (0 allocations: 0 bytes)#152.179 ns (0 allocations: 0 bytes) using desktop PC
 #@btime smallestpositiverootintervalnewtonregulafalsi((-1.33,2.0,1.0,6.0),pp)#126.486 ns (2 allocations: 64 bytes)....2.5155562382541037...cubic:18ns
 #@btime gensmallestpositiverootintervalnewton(1.33,2.0,-2.63,6.0)#32.639 ns (0 allocations: 0 bytes) ....Inf
 #@show gensmallestpositiverootintervalnewton(2.0,-3.0,-0.5,-5.0)

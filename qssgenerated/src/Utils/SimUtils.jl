@@ -1,5 +1,5 @@
-#= using BenchmarkTools
-using StaticArrays =#
+using BenchmarkTools
+using StaticArrays
 function minPosRoot(coeff::SVector{2,Float64}, ::Val{1}) # coming from val(1) means coef has x and derx only...size 2
     mpr=-1
         if coeff[2] == 0 
@@ -100,10 +100,30 @@ b=2.0
 c=1.0
 d=6.0 =#
   
-#= coeffs=@SVector[6.0,1.0,2.0,-1.33]
-#@btime cubic5(1.33,12.65,1.0,-6.0)#   0.6308983740365341 #63.615 ns (0 allocations: 0 bytes)
-@show minPosRoot(coeffs,Val(3))
-@btime minPosRoot(coeffs,Val(3)) =#
+coeffs=@SVector[6.0,1.0,2.0,-1.33]
+
+@show minPosRoot(coeffs,Val(3))#2.515556238254016
+@btime minPosRoot(coeffs,Val(3))#79.607 ns (0 allocations: 0 bytes) vs 152.179 ns (0 allocations: 0 bytes) using smallestpositiverootintervalnewtonregulafalsi(coeffs,pp)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

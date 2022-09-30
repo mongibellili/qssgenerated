@@ -81,7 +81,7 @@ end
     qv[i][0]=q
     return nothing
 end =#
-#= function updateQ(::Val{2},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor0{Float64}}, quantum::Vector{Float64},av::MVector{T,MVector{T,Float64}},uv::MVector{T,MVector{O,Float64}},qaux::MVector{T,MVector{O,Float64}},olddx::MVector{T,MVector{O,Float64}},tq::MVector{T,Float64},tu::MVector{T,Float64},simt::Float64,ft::Float64)where{T,O}
+function updateQ(::Val{2},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor0{Float64}}, quantum::Vector{Float64},av::MVector{T,MVector{T,Float64}},uv::MVector{T,MVector{O,Float64}},qaux::MVector{T,MVector{O,Float64}},olddx::MVector{T,MVector{O,Float64}},tq::MVector{T,Float64},tu::MVector{T,Float64},simt::Float64,ft::Float64)where{T,O}
     q=qv[i][0]
     q1=qv[i][1]
     x=xv[i][0]
@@ -139,6 +139,8 @@ end =#
 
 
         q1=(a*q+u+h*u1)/(1-h*a)
+        #q1=(a*qaux[i][1]+u+h*u1)/(1-h*a)# trying to use oldprojected q shifts the graph up (sys2-nonstiff)
+        #q1=(a*qv[i][0]+u+h*u1)/(1-h*a)   # trying to use    old       q shifts the graph up (sys2-nonstiff)
  
     else
         ddx=u1
@@ -166,9 +168,9 @@ end =#
     qv[i][0]=q
     qv[i][1]=q1  
     return nothing
-end =#
+end
 
-function updateQ(::Val{2},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor0{Float64}}, quantum::Vector{Float64},av::MVector{T,MVector{T,Float64}},uv::MVector{T,MVector{O,Float64}},qaux::MVector{T,MVector{O,Float64}},olddx::MVector{T,MVector{O,Float64}},tq::MVector{T,Float64},tu::MVector{T,Float64},simt::Float64,ft::Float64)where{T,O}
+#= function updateQ(::Val{2},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor0{Float64}}, quantum::Vector{Float64},av::MVector{T,MVector{T,Float64}},uv::MVector{T,MVector{O,Float64}},qaux::MVector{T,MVector{O,Float64}},olddx::MVector{T,MVector{O,Float64}},tq::MVector{T,Float64},tu::MVector{T,Float64},simt::Float64,ft::Float64)where{T,O}
     q=xv[i][0]
     q1=qv[i][1]
     x=xv[i][0]
@@ -212,7 +214,7 @@ function updateQ(::Val{2},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor
             end
         end
         
-        q1=a*q+u  # this is missing +h*x2=+h(a*q1+u1)...as if there is an order drop here
+        q1=a*q+u  # this is missing +h*x2=+h(a*q1+u1)...as if there is an order drop here...for this version stating q1=a*oldq+u which is old x1 ...trying to make it future leads to nextline error
         q+=dq # in this approach new q has to be after q1...ie q1 cannot be calculated using new q....infinite loop..program does not terminate
  
     else
@@ -243,7 +245,7 @@ function updateQ(::Val{2},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor
     qv[i][0]=q
     qv[i][1]=q1  
     return nothing
-end
+end =#
 
 #= function updateQ(::Val{3},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor0{Float64}}, quantum::Vector{Float64},av::MVector{T,MVector{T,Float64}},uv::MVector{T,MVector{O,Float64}},qaux::MVector{T,MVector{O,Float64}},olddx::MVector{T,MVector{O,Float64}},tq::MVector{T,Float64},tu::MVector{T,Float64},simt::Float64,ft::Float64)where{T,O}
     q=xv[i][0]  # q=x used in liqss1 and liqss3
@@ -396,7 +398,7 @@ function updateQ(::Val{3},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor
              h =  minPosRoot(coef, Val(2))
         end
         q=((x+h*u+h*h*u1/2)*(1-h*a)+(u+h*u1)*h*h*a/2)/(1-2*h*a+h*h*a*a/2) =#
-
+#= 
         h = ft-simt
         q = ((x + h * u + h * h / 2 * (a*u+u1))  + (h*h * h / 6 ) * (a*a*u + a*u1+u2)) /
                  (1 - h * a + h * h * a * a / 2-h*h*h*a*a*a/6)
@@ -410,10 +412,39 @@ function updateQ(::Val{3},i::Int, xv::Vector{Taylor0{Float64}},qv::Vector{Taylor
           q = ((x + h * u + h * h / 2 * (a*u+u1))  + (h*h * h / 6 ) * (a*a*u + a*u1+u2)) /
                  (1 - h * a + h * h * a * a / 2 -h*h*h*a*a*a/6)
         end
-
-
         q1=(a*q+u+h*u1+h*h*(a*u1+u2)/2)/(1-h*a-h*h*a*a/2)
+        q2=(a*q1+u1+h*u2)/(1-h*a) =#
+        #----------------------------------------------------------------------
+        h = ft-simt
+        α=x+h*u+h*h*u1/2+h*h*h*(a*(u1+h*u2)/(1-h*a))/6
+        β=h*h*a/2+h*h*h*a*a/(6-6*h*a)
+        γ=1+h*h*a*a/2-2*h*a
+        θ=u+h*(u1-a*u)+h*h*(u2-a*u1)/2
+        η=γ-h*a-h*h*h*a*a*a/2+2*h*h*a*a-β*a+β*h*a*a
+        q = (β*θ+α*γ)/η
+        if (abs(q - x) > 2 * quantum[i]) # removing this did nothing...check @btime later
+          h = sqrt(abs(2 * quantum[i] / dddx));
+          α=x+h*u+h*h*u1/2+h*h*h*(a*(u1+h*u2)/(1-h*a))/6
+          β=h*h*a/2+h*h*h*a*a/(6-6*h*a)
+          γ=1+h*h*a*a/2-2*h*a
+          θ=u+h*(u1-a*u)+h*h*(u2-a*u1)/2
+          η=γ-h*a-h*h*h*a*a*a/2+2*h*h*a*a-β*a+β*h*a*a
+          q = (β*θ+α*γ)/η
+        end
+        while (abs(q - x) > 2 * quantum[i]) 
+          h = h * sqrt(quantum[i] / abs(q - x));
+          α=x+h*u+h*h*u1/2+h*h*h*(a*(u1+h*u2)/(1-h*a))/6
+          β=h*h*a/2+h*h*h*a*a/(6-6*h*a)
+          γ=1+h*h*a*a/2-2*h*a
+          θ=u+h*(u1-a*u)+h*h*(u2-a*u1)/2
+          η=γ-h*a-h*h*h*a*a*a/2+2*h*h*a*a-β*a+β*h*a*a
+          q = (β*θ+α*γ)/η
+        end
+        q1=(a*q+u+h*(u1-q*a*a-a*u)+h*h*(a*u1+u2)/2)/γ
         q2=(a*q1+u1+h*u2)/(1-h*a)
+
+
+
  
     else
         dddx=u2

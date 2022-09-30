@@ -60,11 +60,11 @@ end
 function computeNextTime(::Val{2}, i::Int, currentTime::Float64, nextTime::MVector{T,Float64}, x::Vector{Taylor0{Float64}}, quantum::Vector{Float64})where{T}
     absDeltaT=1e-12 # minimum deltaT to protect against der=Inf coming from sqrt(0) for example...similar to min ΔQ
       if (x[i].coeffs[3]) != 0
-          tempTime=max(sqrt(abs(quantum[i] / ((x[i].coeffs[3])))),absDeltaT)
+          tempTime=max(sqrt(abs(quantum[i] / (2*(x[i].coeffs[3])))),absDeltaT)
           if tempTime!=absDeltaT #normal
               nextTime[i] = currentTime + tempTime#sqrt(abs(quantum[i] / ((x[i].coeffs[3])*2))) #*2 cuz coeff contains fact()
           else#usual sqrt(quant/der) is very small
-            x[i].coeffs[3]=sign(x[i].coeffs[3])*(abs(quantum[i])/(absDeltaT*absDeltaT))# adjust second derivative if it is too high
+            x[i].coeffs[3]=sign(x[i].coeffs[3])*(abs(quantum[i])/(absDeltaT*absDeltaT))/2# adjust second derivative if it is too high
             nextTime[i] = currentTime + tempTime
           end
       else

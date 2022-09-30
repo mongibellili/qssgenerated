@@ -1,11 +1,6 @@
-<<<<<<< HEAD
-# using TimerOutputs
+ using TimerOutputs
 function QSS_integrate(::Val{O}, s::QSS_data{T,Z}, odep::NLODEProblem{T,D,Z,Y},f::Function) where {O,T,D,Z,Y}
-#  reset_timer!()
-=======
-
-function QSS_integrate(::Val{O}, s::QSS_data{T,Z}, odep::NLODEProblem{T,D,Z,Y},f::Function) where {O,T,D,Z,Y}
->>>>>>> f6146dcfae368a3c045fb2f48b5714650e0e31dc
+ reset_timer!()
 #*********************************settings*****************************************
 #printCounter=[0,0]#vector{Int} fort debugging to be deleted
 ft = s.finalTime
@@ -128,8 +123,7 @@ while simt < ft #&& printcount < 10
       quantum[index] = absQ
     end
     tx[index] = simt
-    #@timeit "updateQ" 
-    for k = 1:O
+    @timeit "updateQ" for k = 1:O
       q[index].coeffs[k] = x[index].coeffs[k] #updateQ
     end
     tq[index] = simt #tq needed for higher orders down before computing f(q,d,t)
@@ -150,8 +144,7 @@ while simt < ft #&& printcount < 10
         #@timeit "state-compder" 
          computeDerivative(Val(O), x[j], taylorOpsCache[1],integratorCache,elapsed)
         #computeDerivative(Val(O), x[j], taylorOpsCache[1])
-       # @timeit "state-recomputenext"  
-        reComputeNextTime(Val(O), j, simt, nextStateTime, x, q, quantum)
+        @timeit "state-recomputenext"  reComputeNextTime(Val(O), j, simt, nextStateTime, x, q, quantum)
       end#end if j!=0
     end#end for SD
     for i = 1:length(SZ[index])
@@ -258,7 +251,7 @@ end#end while
 for i=1:T# throw away empty points
   resize!(savedVars[i],count)
 end
-# print_timer()
+ print_timer()
 resize!(savedTimes,count)
 Sol(savedTimes, savedVars)
 end#end integrate
