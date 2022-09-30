@@ -36,9 +36,9 @@ liqss2 (h exacte)
 liqss3 (h exacte)
  Section              ncalls     time    %tot     avg     alloc    %tot      avg
  ───────────────────────────────────────────────────────────────────────────────
- state-recompute        141k   40.5ms   46.6%   287ns     0.00B     - %    0.00B
- state-updateQ         70.7k   35.4ms   40.7%   501ns     0.00B     - %    0.00B
- updateLinearApprox    70.7k   11.1ms   12.8%   157ns     0.00B     - %    0.00B
+ state-recompute       10.5k   3.22ms   50.0%   306ns     0.00B     - %    0.00B
+ state-updateQ         5.28k   2.39ms   37.2%   453ns     0.00B     - %    0.00B
+ updateLinearApprox    5.28k    830μs   12.9%   157ns     0.00B     - %    0.00B
 
 
 OrdinaryDiffEq: 
